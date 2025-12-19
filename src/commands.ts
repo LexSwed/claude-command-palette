@@ -10,17 +10,12 @@ export function getCommandTitle(cmd: ClaudeCommand): string {
   return `${icon} ${cmd.name}`;
 }
 
-function getTerminal(): vscode.Terminal {
-  const existing = vscode.window.terminals.find((t) => t.name === "Claude");
-  if (existing) {
-    return existing;
-  }
+function createTerminal(): vscode.Terminal {
   return vscode.window.createTerminal("Claude");
 }
 
 function executeCommand(cmd: ClaudeCommand): void {
-  const terminal = getTerminal();
-  terminal.show();
+  const terminal = createTerminal();
 
   if (cmd.kind === "command") {
     terminal.sendText(`claude /${cmd.type}:${cmd.name}`);
@@ -28,6 +23,14 @@ function executeCommand(cmd: ClaudeCommand): void {
     // Skills are invoked by name
     terminal.sendText(`claude "use ${cmd.name} skill"`);
   }
+
+  vscode.window
+    .showInformationMessage(`Running Claude: ${cmd.name}`, "Show Terminal")
+    .then((selection) => {
+      if (selection) {
+        terminal.show();
+      }
+    });
 }
 
 export function registerClaudeCommands(
