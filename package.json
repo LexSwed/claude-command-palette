@@ -23,7 +23,8 @@
     "anthropic"
   ],
   "engines": {
-    "vscode": "^1.107.0"
+    "vscode": "^1.107.0",
+    "pnpm": ">=10"
   },
   "categories": [
     "AI"
