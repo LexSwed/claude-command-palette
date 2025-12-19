@@ -26,7 +26,23 @@ function getCommandDirs(): { project: string | null; user: string } {
 function parseDescription(content: string): string | undefined {
   const match = content.match(/^---\s*\n([\s\S]*?)\n---/);
   if (!match) return undefined;
-  return match[1].match(/^description:\s*(.+)$/m)?.[1]?.trim();
+
+  const frontmatter = match[1];
+
+  // Handle multiline: description: |
+  const multilineMatch = frontmatter.match(
+    /^description:\s*\|\s*\n((?:[ \t]+.+\n?)+)/m
+  );
+  if (multilineMatch) {
+    return multilineMatch[1]
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  // Handle single line: description: text
+  return frontmatter.match(/^description:\s*(.+)$/m)?.[1]?.trim();
 }
 
 async function discoverCommandsInDir(

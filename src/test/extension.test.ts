@@ -3,6 +3,26 @@ import * as path from "path";
 import * as fs from "fs";
 import * as os from "os";
 
+function parseDescription(content: string): string | undefined {
+  const match = content.match(/^---\s*\n([\s\S]*?)\n---/);
+  if (!match) return undefined;
+
+  const frontmatter = match[1];
+
+  const multilineMatch = frontmatter.match(
+    /^description:\s*\|\s*\n((?:[ \t]+.+\n?)+)/m
+  );
+  if (multilineMatch) {
+    return multilineMatch[1]
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  return frontmatter.match(/^description:\s*(.+)$/m)?.[1]?.trim();
+}
+
 suite("Discovery Test Suite", () => {
   const testDir = path.join(os.tmpdir(), "claude-command-palette-test");
   const commandsDir = path.join(testDir, ".claude", "commands");
@@ -22,8 +42,19 @@ description: A command with description
 ---
 
 # Command
+`
+    );
 
-Instructions here.
+    fs.writeFileSync(
+      path.join(commandsDir, "multiline-command.md"),
+      `---
+description: |
+  This is a multiline
+  description that spans
+  multiple lines
+---
+
+# Command
 `
     );
   });
@@ -39,24 +70,30 @@ Instructions here.
     );
   });
 
-  test("Parse frontmatter description", () => {
+  test("Parse single-line description", () => {
     const content = fs.readFileSync(
       path.join(commandsDir, "described-command.md"),
       "utf-8"
     );
-    const match = content.match(/^---\s*\n([\s\S]*?)\n---/);
-    assert.ok(match);
+    assert.strictEqual(parseDescription(content), "A command with description");
+  });
+
+  test("Parse multiline description", () => {
+    const content = fs.readFileSync(
+      path.join(commandsDir, "multiline-command.md"),
+      "utf-8"
+    );
     assert.strictEqual(
-      match![1].match(/^description:\s*(.+)$/m)?.[1]?.trim(),
-      "A command with description"
+      parseDescription(content),
+      "This is a multiline description that spans multiple lines"
     );
   });
 
-  test("No frontmatter returns null", () => {
+  test("No frontmatter returns undefined", () => {
     const content = fs.readFileSync(
       path.join(commandsDir, "test-command.md"),
       "utf-8"
     );
-    assert.strictEqual(content.match(/^---\s*\n([\s\S]*?)\n---/), null);
+    assert.strictEqual(parseDescription(content), undefined);
   });
 });
