@@ -1,71 +1,74 @@
-# claude-command-palette README
+# Claude Code Command Palette
 
-This is the README for your extension "claude-command-palette". After writing up a brief description, we recommend including the following sections.
+Run [Claude Code](https://docs.anthropic.com/en/docs/claude-code) custom slash commands and skills directly from VS Code's Command Palette.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- **Discover commands automatically** from both project (`.claude/commands/`) and user (`~/.claude/commands/`) directories
+- **Discover skills** from `.claude/skills/` directories
+- **Quick access** via Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
+- **Live reload** - automatically detects new or modified commands and skills
 
-For example if there is an image subfolder under your extension project workspace:
+## Usage
 
-\!\[feature X\]\(images/feature-x.png\)
+1. Open Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
+2. Type "Run Claude Code Command"
+3. Select a command or skill from the list
+4. The command runs in a dedicated "Claude" terminal
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+### Commands
+
+| Command                          | Description                                           |
+| -------------------------------- | ----------------------------------------------------- |
+| `Run Claude Code Command`        | Shows a picker with all available commands and skills |
+| `Claude Code: Refresh Commands`  | Manually refresh the command list                     |
+
+### Recommended Keybinding
+
+For quick access, add a custom keybinding in VS Code:
+
+1. Open Keyboard Shortcuts (`Cmd+K Cmd+S` / `Ctrl+K Ctrl+S`)
+2. Search for "Run Claude Code Command"
+3. Add your preferred keybinding (e.g., `Cmd+Option+C` / `Ctrl+Alt+C`)
+
+Or add to `keybindings.json`:
+
+```json
+{
+  "key": "cmd+alt+c",
+  "command": "claude-command-palette.showCommands"
+}
+```
+
+## Command & Skill Locations
+
+The extension discovers commands and skills from:
+
+| Type     | Project-level              | User-level                   |
+| -------- | -------------------------- | ---------------------------- |
+| Commands | `.claude/commands/*.md`    | `~/.claude/commands/*.md`    |
+| Skills   | `.claude/skills/*/SKILL.md`| `~/.claude/skills/*/SKILL.md`|
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- VS Code 1.107.0 or later
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed
 
-## Extension Settings
+## Installation
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+### From VS Code Marketplace
 
-For example:
+1. Open VS Code
+2. Go to Extensions (`Cmd+Shift+X` / `Ctrl+Shift+X`)
+3. Search for "Claude Code Command Palette"
+4. Click Install
 
-This extension contributes the following settings:
+### From VSIX
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+```bash
+code --install-extension claude-code-command-palette-0.1.0.vsix
+```
 
-## Known Issues
+## License
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+MIT

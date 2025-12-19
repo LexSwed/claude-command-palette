@@ -102,32 +102,40 @@ export async function discoverCommands(): Promise<ClaudeCommand[]> {
   if (skillDirs.project) {
     const projectSkills = await findSkillDirsIn(skillDirs.project);
     for (const filePath of projectSkills) {
-      const content = await fs.promises.readFile(filePath, 'utf-8');
-      const { name, description } = parseSkillFrontmatter(content);
-      const dirName = path.basename(path.dirname(filePath));
-      commands.push({
-        name: name || dirName,
-        type: 'project',
-        kind: 'skill',
-        filePath,
-        description,
-      });
+      try {
+        const content = await fs.promises.readFile(filePath, 'utf-8');
+        const { name, description } = parseSkillFrontmatter(content);
+        const dirName = path.basename(path.dirname(filePath));
+        commands.push({
+          name: name || dirName,
+          type: 'project',
+          kind: 'skill',
+          filePath,
+          description,
+        });
+      } catch {
+        // Skip unreadable skill files
+      }
     }
   }
 
   // Find user skills
   const userSkills = await findSkillDirsIn(skillDirs.user);
   for (const filePath of userSkills) {
-    const content = await fs.promises.readFile(filePath, 'utf-8');
-    const { name, description } = parseSkillFrontmatter(content);
-    const dirName = path.basename(path.dirname(filePath));
-    commands.push({
-      name: name || dirName,
-      type: 'user',
-      kind: 'skill',
-      filePath,
-      description,
-    });
+    try {
+      const content = await fs.promises.readFile(filePath, 'utf-8');
+      const { name, description } = parseSkillFrontmatter(content);
+      const dirName = path.basename(path.dirname(filePath));
+      commands.push({
+        name: name || dirName,
+        type: 'user',
+        kind: 'skill',
+        filePath,
+        description,
+      });
+    } catch {
+      // Skip unreadable skill files
+    }
   }
 
   return commands;

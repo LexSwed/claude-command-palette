@@ -33,8 +33,6 @@ async function updateCommandPalette(_commands: ClaudeCommand[]): Promise<void> {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-  console.log("Claude Command Palette is now active");
-
   // Initial discovery
   await refreshCommands(context);
 
