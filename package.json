@@ -1,6 +1,6 @@
 {
-  "name": "claude-command-palette",
-  "displayName": "claude-command-palette",
+  "name": "claude-code-command-palette",
+  "displayName": "Claude Code Command Palette",
   "description": "Adds Claude custom slash commands and skills into VS Code's Command Palette",
   "version": "0.0.1",
   "engines": {
