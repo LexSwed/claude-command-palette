@@ -1,30 +1,28 @@
-import * as vscode from 'vscode';
-import { ClaudeCommand } from './discovery';
+import * as vscode from "vscode";
+import { ClaudeCommand } from "./discovery";
 
 export function getCommandId(cmd: ClaudeCommand): string {
   return `claude-command-palette.run.${cmd.kind}.${cmd.type}.${cmd.name}`;
 }
 
 export function getCommandTitle(cmd: ClaudeCommand): string {
-  if (cmd.kind === 'skill') {
-    return `Run Claude Code skill: ${cmd.name}`;
-  }
-  return `Run Claude Code ${cmd.type}: ${cmd.name}`;
+  const icon = cmd.kind === "skill" ? "$(sparkle)" : "$(terminal)";
+  return `${icon} ${cmd.name}`;
 }
 
 function getTerminal(): vscode.Terminal {
-  const existing = vscode.window.terminals.find(t => t.name === 'Claude');
+  const existing = vscode.window.terminals.find((t) => t.name === "Claude");
   if (existing) {
     return existing;
   }
-  return vscode.window.createTerminal('Claude');
+  return vscode.window.createTerminal("Claude");
 }
 
 function executeCommand(cmd: ClaudeCommand): void {
   const terminal = getTerminal();
   terminal.show();
 
-  if (cmd.kind === 'command') {
+  if (cmd.kind === "command") {
     terminal.sendText(`claude /${cmd.type}:${cmd.name}`);
   } else {
     // Skills are invoked by name
