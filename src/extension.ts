@@ -149,8 +149,9 @@ export async function activate(context: vscode.ExtensionContext) {
         }
 
         const items = currentCommands.map((cmd) => ({
-          label: `$(terminal) ${cmd.name}`,
-          description: cmd.description || "",
+          label: `${cmd.type === "user" ? "$(home)" : "$(folder)"} ${cmd.name}`,
+          description: cmd.type === "user" ? "User" : "Project",
+          detail: cmd.description || undefined,
           command: cmd,
         }));
 

@@ -2,7 +2,7 @@
   "name": "claude-code-command-palette",
   "displayName": "Claude Code Command Palette",
   "description": "Adds Claude custom slash commands into VS Code's Command Palette",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "publisher": "alex-vechy",
   "icon": "assets/icon.png",
   "author": "LexSwed",
