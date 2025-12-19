@@ -9,13 +9,19 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "claude-command-palette.helloWorld",
-        "title": "Hello World"
+        "command": "claude-command-palette.showCommands",
+        "title": "Run Claude Code Command"
+      },
+      {
+        "command": "claude-command-palette.refresh",
+        "title": "Claude Code: Refresh Commands"
       }
     ]
   },
