@@ -1,27 +1,26 @@
 # Claude Code Command Palette
 
-Run [Claude Code](https://docs.anthropic.com/en/docs/claude-code) custom slash commands and skills directly from VS Code's Command Palette.
+Run [Claude Code](https://docs.anthropic.com/en/docs/claude-code) custom slash commands directly from VS Code's Command Palette.
 
 ## Features
 
 - **Discover commands automatically** from both project (`.claude/commands/`) and user (`~/.claude/commands/`) directories
-- **Discover skills** from `.claude/skills/` directories
 - **Quick access** via Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
-- **Live reload** - automatically detects new or modified commands and skills
+- **Live reload** - automatically detects new or modified commands
 
 ## Usage
 
 1. Open Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
 2. Type "Run Claude Code Command"
-3. Select a command or skill from the list
+3. Select a command from the list
 4. The command runs in a dedicated "Claude" terminal
 
 ### Commands
 
-| Command                          | Description                                           |
-| -------------------------------- | ----------------------------------------------------- |
-| `Run Claude Code Command`        | Shows a picker with all available commands and skills |
-| `Claude Code: Refresh Commands`  | Manually refresh the command list                     |
+| Command                          | Description                                   |
+| -------------------------------- | --------------------------------------------- |
+| `Run Claude Code Command`        | Shows a picker with all available commands    |
+| `Claude Code: Refresh Commands`  | Manually refresh the command list             |
 
 ### Recommended Keybinding
 
@@ -40,14 +39,13 @@ Or add to `keybindings.json`:
 }
 ```
 
-## Command & Skill Locations
+## Command Locations
 
-The extension discovers commands and skills from:
+The extension discovers commands from:
 
-| Type     | Project-level              | User-level                   |
-| -------- | -------------------------- | ---------------------------- |
-| Commands | `.claude/commands/*.md`    | `~/.claude/commands/*.md`    |
-| Skills   | `.claude/skills/*/SKILL.md`| `~/.claude/skills/*/SKILL.md`|
+| Type     | Project-level              | User-level                 |
+| -------- | -------------------------- | -------------------------- |
+| Commands | `.claude/commands/*.md`    | `~/.claude/commands/*.md`  |
 
 ## Requirements
 

@@ -1,81 +1,160 @@
 import * as vscode from "vscode";
-import { discoverCommands, ClaudeCommand } from "./discovery";
-import {
-  registerClaudeCommands,
-  unregisterCommands,
-  getCommandId,
-  getCommandTitle,
-} from "./commands";
-import { createWatchers } from "./watcher";
+import * as path from "path";
+import * as fs from "fs";
+import * as os from "os";
+
+interface ClaudeCommand {
+  name: string;
+  type: "project" | "user";
+  filePath: string;
+  description?: string;
+}
 
 let registeredDisposables: vscode.Disposable[] = [];
 let currentCommands: ClaudeCommand[] = [];
 
-async function refreshCommands(
-  context: vscode.ExtensionContext
-): Promise<void> {
-  // Unregister old commands
-  unregisterCommands(registeredDisposables);
-  registeredDisposables = [];
-
-  // Discover new commands
-  currentCommands = await discoverCommands();
-
-  // Register VS Code commands
-  registeredDisposables = registerClaudeCommands(context, currentCommands);
-
-  // Update command palette items
-  await updateCommandPalette(currentCommands);
+function getCommandDirs(): { project: string | null; user: string } {
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  return {
+    project: workspaceFolder
+      ? path.join(workspaceFolder, ".claude", "commands")
+      : null,
+    user: path.join(os.homedir(), ".claude", "commands"),
+  };
 }
 
-async function updateCommandPalette(_commands: ClaudeCommand[]): Promise<void> {
-  // VS Code doesn't support dynamic contributes.commands, so we use a QuickPick
+function parseDescription(content: string): string | undefined {
+  const match = content.match(/^---\s*\n([\s\S]*?)\n---/);
+  if (!match) return undefined;
+  return match[1].match(/^description:\s*(.+)$/m)?.[1]?.trim();
+}
+
+async function discoverCommandsInDir(
+  dir: string,
+  type: "project" | "user"
+): Promise<ClaudeCommand[]> {
+  if (!fs.existsSync(dir)) return [];
+
+  const commands: ClaudeCommand[] = [];
+  const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
+
+    const filePath = path.join(dir, entry.name);
+    const name = path.basename(entry.name, ".md");
+
+    try {
+      const content = await fs.promises.readFile(filePath, "utf-8");
+      commands.push({ name, type, filePath, description: parseDescription(content) });
+    } catch {
+      commands.push({ name, type, filePath });
+    }
+  }
+
+  return commands;
+}
+
+async function discoverCommands(): Promise<ClaudeCommand[]> {
+  const { project, user } = getCommandDirs();
+  const [projectCommands, userCommands] = await Promise.all([
+    project ? discoverCommandsInDir(project, "project") : [],
+    discoverCommandsInDir(user, "user"),
+  ]);
+  return [...projectCommands, ...userCommands];
+}
+
+function createWatchers(onChanged: () => void): vscode.Disposable[] {
+  const watchers: vscode.Disposable[] = [];
+
+  const workspaceWatcher = vscode.workspace.createFileSystemWatcher(
+    new vscode.RelativePattern(
+      vscode.workspace.workspaceFolders?.[0] || "",
+      ".claude/commands/**/*.md"
+    )
+  );
+  workspaceWatcher.onDidCreate(onChanged);
+  workspaceWatcher.onDidDelete(onChanged);
+  workspaceWatcher.onDidChange(onChanged);
+  watchers.push(workspaceWatcher);
+
+  const userWatcher = vscode.workspace.createFileSystemWatcher(
+    new vscode.RelativePattern(
+      path.join(os.homedir(), ".claude"),
+      "commands/**/*.md"
+    )
+  );
+  userWatcher.onDidCreate(onChanged);
+  userWatcher.onDidDelete(onChanged);
+  userWatcher.onDidChange(onChanged);
+  watchers.push(userWatcher);
+
+  return watchers;
+}
+
+async function refreshCommands(context: vscode.ExtensionContext): Promise<void> {
+  registeredDisposables.forEach((d) => d.dispose());
+  registeredDisposables = [];
+
+  currentCommands = await discoverCommands();
+
+  for (const cmd of currentCommands) {
+    const id = `claude-command-palette.run.${cmd.type}.${cmd.name}`;
+    const disposable = vscode.commands.registerCommand(id, () => {
+      const terminal = vscode.window.createTerminal("Claude");
+      terminal.sendText(`claude /${cmd.name}`);
+      vscode.window
+        .showInformationMessage(`Running Claude: ${cmd.name}`, "Show Terminal")
+        .then((selection) => {
+          if (selection) terminal.show();
+        });
+    });
+    registeredDisposables.push(disposable);
+    context.subscriptions.push(disposable);
+  }
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-  // Initial discovery
   await refreshCommands(context);
 
-  // Register refresh command
-  const refreshDisposable = vscode.commands.registerCommand(
-    "claude-command-palette.refresh",
-    () => refreshCommands(context)
+  context.subscriptions.push(
+    vscode.commands.registerCommand("claude-command-palette.refresh", () =>
+      refreshCommands(context)
+    )
   );
-  context.subscriptions.push(refreshDisposable);
 
-  // Register command picker
-  const pickerDisposable = vscode.commands.registerCommand(
-    "claude-command-palette.showCommands",
-    async () => {
-      if (currentCommands.length === 0) {
-        vscode.window.showInformationMessage(
-          "No Claude commands or skills found."
-        );
-        return;
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "claude-command-palette.showCommands",
+      async () => {
+        if (currentCommands.length === 0) {
+          vscode.window.showInformationMessage("No Claude commands found.");
+          return;
+        }
+
+        const items = currentCommands.map((cmd) => ({
+          label: `$(terminal) ${cmd.name}`,
+          description: cmd.description || "",
+          command: cmd,
+        }));
+
+        const selected = await vscode.window.showQuickPick(items, {
+          placeHolder: "Select a Claude command to run",
+        });
+
+        if (selected) {
+          const id = `claude-command-palette.run.${selected.command.type}.${selected.command.name}`;
+          vscode.commands.executeCommand(id);
+        }
       }
-
-      const items = currentCommands.map((cmd) => ({
-        label: getCommandTitle(cmd),
-        description: cmd.description || "",
-        command: cmd,
-      }));
-
-      const selected = await vscode.window.showQuickPick(items, {
-        placeHolder: "Select a Claude command to run",
-      });
-
-      if (selected) {
-        vscode.commands.executeCommand(getCommandId(selected.command));
-      }
-    }
+    )
   );
-  context.subscriptions.push(pickerDisposable);
 
-  // Set up file watchers
-  const watchers = createWatchers(() => refreshCommands(context));
-  watchers.forEach((w) => context.subscriptions.push(w));
+  createWatchers(() => refreshCommands(context)).forEach((w) =>
+    context.subscriptions.push(w)
+  );
 }
 
 export function deactivate() {
-  unregisterCommands(registeredDisposables);
+  registeredDisposables.forEach((d) => d.dispose());
 }
